@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaySmena — Учёт смен для малого бизнеса</title>
+<meta name="description" content="Простой учёт продаж, прибыли и смен для кафе, шаурмячных, ларьков и малого бизнеса. Без бухгалтера. Без Excel.">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;
+  --or:#ff6b1a;
+  --or2:#ff9a5c;
+  --tx:#f0ebe4;
+  --tx2:#8a8278;
+  --surf:#141414;
+  --surf2:#1e1e1e;
+  --bord:#262626;
+  --gr:#3ecf6e;
+  --ub:'Unbounded',sans-serif;
+  --on:'Onest',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:var(--on);overflow-x:hidden;cursor:default;}
+
+/* NOISE */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.5;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.04);}
+.nav-logo{font-family:var(--ub);font-size:18px;font-weight:900;letter-spacing:-.02em;}
+.nav-logo span{color:var(--or);}
+.nav-cta{background:var(--or);color:#0a0a0a;font-family:var(--on);font-size:13px;font-weight:700;padding:10px 22px;border-radius:50px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.nav-cta:hover{background:var(--or2);transform:scale(1.03);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 20px 80px;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.18) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.25);border-radius:50px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--or);letter-spacing:.04em;margin-bottom:28px;animation:fadeUp .6s ease both;}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--or);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+h1{font-family:var(--ub);font-size:clamp(36px,7vw,80px);font-weight:900;line-height:1.05;letter-spacing:-.04em;margin-bottom:24px;animation:fadeUp .7s .1s ease both;}
+h1 .orange{color:var(--or);}
+h1 .line2{display:block;color:var(--tx2);}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:var(--tx2);max-width:560px;line-height:1.7;margin-bottom:40px;font-weight:400;animation:fadeUp .7s .2s ease both;}
+.hero-sub b{color:var(--tx);font-weight:600;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .7s .3s ease both;}
+.btn-primary{background:var(--or);color:#0a0a0a;font-family:var(--on);font-size:15px;font-weight:700;padding:16px 36px;border-radius:50px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.btn-primary:hover{background:var(--or2);box-shadow:0 8px 40px rgba(255,107,26,.4);transform:translateY(-2px);}
+.btn-secondary{background:transparent;color:var(--tx);font-family:var(--on);font-size:15px;font-weight:600;padding:16px 36px;border-radius:50px;border:1.5px solid var(--bord);cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.btn-secondary:hover{border-color:var(--or);color:var(--or);}
+.hero-stats{display:flex;gap:40px;margin-top:64px;animation:fadeUp .7s .4s ease both;flex-wrap:wrap;justify-content:center;}
+.hero-stat-num{font-family:var(--ub);font-size:28px;font-weight:900;color:var(--tx);}
+.hero-stat-num span{color:var(--or);}
+.hero-stat-lbl{font-size:12px;color:var(--tx2);margin-top:2px;font-weight:500;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* MOCK APP */
+.mock-wrap{padding:0 20px 80px;max-width:420px;margin:0 auto;animation:fadeUp .8s .5s ease both;}
+.mock{background:var(--surf);border:1px solid var(--bord);border-radius:24px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);transform:perspective(1000px) rotateX(2deg);}
+.mock-topbar{background:#111;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord);}
+.mock-logo{font-family:var(--ub);font-size:13px;font-weight:900;}
+.mock-logo span{color:var(--or);}
+.mock-badge{background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.25);color:var(--gr);font-size:9px;font-weight:700;padding:3px 8px;border-radius:50px;font-family:var(--on);}
+.mock-body{padding:16px;}
+.mock-hero-card{background:linear-gradient(135deg,#1a1410,#201a0e);border:1px solid rgba(255,107,26,.15);border-radius:14px;padding:16px;margin-bottom:12px;}
+.mock-lbl{font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-family:var(--on);}
+.mock-num{font-family:var(--ub);font-size:28px;font-weight:900;color:var(--or);}
+.mock-sub{font-size:10px;color:var(--tx2);margin-top:3px;}
+.mock-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.mock-cell{background:var(--surf2);border:1px solid var(--bord);border-radius:10px;padding:12px;text-align:center;}
+.mock-cell-num{font-family:var(--ub);font-size:16px;font-weight:900;margin-bottom:2px;}
+.mock-cell-lbl{font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;}
+.mock-btn-open{background:var(--or);color:#0a0a0a;border:none;border-radius:10px;padding:12px;width:100%;font-family:var(--on);font-size:12px;font-weight:800;cursor:default;}
+.mock-tabs{display:flex;gap:0;border-top:1px solid var(--bord);background:#111;}
+.mock-tab{flex:1;padding:10px;text-align:center;font-size:9px;color:var(--tx2);font-weight:700;}
+.mock-tab.active{color:var(--or);}
+.mock-tab-icon{font-size:14px;display:block;margin-bottom:2px;}
+
+/* FEATURES */
+.features{padding:100px 20px;max-width:1100px;margin:0 auto;}
+.section-eyebrow{font-family:var(--on);font-size:11px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;text-align:center;}
+.section-title{font-family:var(--ub);font-size:clamp(26px,4vw,44px);font-weight:900;text-align:center;letter-spacing:-.03em;margin-bottom:60px;line-height:1.15;}
+.section-title span{color:var(--or);}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.feat-card{background:var(--surf);border:1px solid var(--bord);border-radius:20px;padding:28px;transition:all .25s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0% 0%,rgba(255,107,26,.06),transparent 60%);opacity:0;transition:opacity .3s;}
+.feat-card:hover{border-color:rgba(255,107,26,.3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.feat-card:hover::before{opacity:1;}
+.feat-icon{font-size:32px;margin-bottom:16px;display:block;}
+.feat-title{font-family:var(--ub);font-size:16px;font-weight:700;margin-bottom:10px;letter-spacing:-.02em;}
+.feat-desc{font-size:14px;color:var(--tx2);line-height:1.65;font-weight:400;}
+.feat-tag{display:inline-block;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.2);color:var(--or);font-size:10px;font-weight:700;padding:3px 9px;border-radius:50px;margin-top:12px;font-family:var(--on);}
+
+/* HOW IT WORKS */
+.how{padding:80px 20px;background:linear-gradient(180deg,transparent,rgba(255,107,26,.03),transparent);position:relative;}
+.how-inner{max-width:900px;margin:0 auto;}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;position:relative;}
+.steps::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--bord),var(--bord),transparent);pointer-events:none;}
+.step{text-align:center;padding:20px;}
+.step-num{width:56px;height:56px;border-radius:50%;background:var(--surf);border:1.5px solid var(--bord);font-family:var(--ub);font-size:18px;font-weight:900;color:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;z-index:1;transition:all .3s;}
+.step:hover .step-num{background:var(--or);color:#0a0a0a;border-color:var(--or);box-shadow:0 0 30px rgba(255,107,26,.4);}
+.step-title{font-family:var(--ub);font-size:14px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em;}
+.step-desc{font-size:13px;color:var(--tx2);line-height:1.6;}
+
+/* FOR WHOM */
+.forwho{padding:80px 20px;max-width:1000px;margin:0 auto;}
+.forwho-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+.who-card{background:var(--surf);border:1px solid var(--bord);border-radius:16px;padding:20px;text-align:center;transition:all .2s;}
+.who-card:hover{border-color:rgba(255,107,26,.3);background:rgba(255,107,26,.04);}
+.who-icon{font-size:28px;margin-bottom:10px;display:block;}
+.who-name{font-size:13px;font-weight:700;color:var(--tx);}
+.who-sub{font-size:11px;color:var(--tx2);margin-top:4px;}
+
+/* PRICING */
+.pricing{padding:80px 20px;max-width:800px;margin:0 auto;text-align:center;}
+.price-card{background:var(--surf);border:1.5px solid rgba(255,107,26,.3);border-radius:24px;padding:40px;max-width:480px;margin:0 auto;position:relative;overflow:hidden;}
+.price-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,107,26,.08),transparent 60%);pointer-events:none;}
+.price-tag{font-family:var(--ub);font-size:56px;font-weight:900;color:var(--or);line-height:1;}
+.price-period{font-size:14px;color:var(--tx2);margin-top:4px;margin-bottom:24px;}
+.price-features{list-style:none;text-align:left;margin-bottom:28px;}
+.price-features li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord);font-size:14px;}
+.price-features li:last-child{border-bottom:none;}
+.price-features .check{color:var(--gr);font-size:16px;flex-shrink:0;}
+.free-badge{position:absolute;top:20px;right:20px;background:var(--gr);color:#0a0a0a;font-size:10px;font-weight:800;padding:4px 10px;border-radius:50px;}
+
+/* TESTIMONIAL */
+.testimonial{padding:60px 20px;max-width:700px;margin:0 auto;text-align:center;}
+.quote{font-size:clamp(18px,3vw,26px);font-style:italic;color:var(--tx);line-height:1.6;margin-bottom:24px;font-weight:300;}
+.quote::before{content:'"';font-family:var(--ub);font-size:60px;color:var(--or);opacity:.3;display:block;line-height:.5;margin-bottom:10px;}
+.quote-author{font-size:13px;color:var(--tx2);font-weight:600;}
+.quote-author b{color:var(--tx);}
+
+/* CTA SECTION */
+.cta-section{padding:100px 20px;text-align:center;position:relative;overflow:hidden;}
+.cta-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.15),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.cta-section h2{font-family:var(--ub);font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:-.03em;margin-bottom:16px;position:relative;}
+.cta-section p{font-size:16px;color:var(--tx2);margin-bottom:36px;position:relative;}
+.cta-section .btn-primary{position:relative;font-size:16px;padding:18px 44px;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--bord);padding:40px 20px;max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-logo{font-family:var(--ub);font-size:16px;font-weight:900;}
+.footer-logo span{color:var(--or);}
+.footer-txt{font-size:12px;color:var(--tx2);}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* MOBILE */
+@media(max-width:600px){
+  nav{padding:16px 20px;}
+  h1{letter-spacing:-.03em;}
+  .steps::before{display:none;}
+  .hero-stats{gap:24px;}
+  footer{flex-direction:column;text-align:center;}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Way<span>Smena</span></div>
+  <a href="https://waysmena.ru/app" class="nav-cta">Попробовать бесплатно →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Для малого бизнеса России
+  </div>
+
+  <h1>
+    Знай сколько<br>
+    <span class="orange">заработал</span>
+    <span class="line2">за каждую смену</span>
+  </h1>
+
+  <p class="hero-sub">
+    Простой учёт продаж и прибыли для <b>кафе, шаурмячных, ларьков и точек</b>.<br>
+    Без Excel. Без бухгалтера. Открыл — записал — закрыл.
+  </p>
+
+  <div class="hero-btns">
+    <a href="https://waysmena.ru/app" class="btn-primary">Начать бесплатно</a>
+    <a href="#features" class="btn-secondary">Как работает?</a>
+  </div>
+
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num"><span>0</span> ₽</div>
+      <div class="hero-stat-lbl">Стоимость сейчас</div>
+    </div>
+    <div style="width:1px;background:var(--bord);height:40px;align-self:center"></div>
+    <div>
+      <div class="hero-stat-num"><span>2</span> мин</div>
+      <div class="hero-stat-lbl">До первого заказа</div>
+    </div>
+    <div style="width:1px;background:var(--bord);height:40px;align-self:center"></div>
+    <div>
+      <div class="hero-stat-num"><span>∞</span></div>
+      <div class="hero-stat-lbl">Заказов и смен</div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCK APP -->
+<div class="mock-wrap reveal">
+  <div class="mock">
+    <div class="mock-topbar">
+      <div class="mock-logo">Way<span>Smena</span></div>
+      <div class="mock-badge">● Смена открыта</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-hero-card">
+        <div class="mock-lbl">Выручка сегодня</div>
+        <div class="mock-num">18 450 ₽</div>
+        <div class="mock-sub">прибыль 9 200 ₽ · заказов 24 · ср. чек 768 ₽</div>
+      </div>
+      <div class="mock-grid">
+        <div class="mock-cell">
+          <div class="mock-cell-num" style="color:#ff6b1a">9 200 ₽</div>
+          <div class="mock-cell-lbl">Прибыль</div>
+        </div>
+        <div class="mock-cell">
+          <div class="mock-cell-num" style="color:#4ea8ff">24</div>
+          <div class="mock-cell-lbl">Заказов</div>
+        </div>
+        <div class="mock-cell">
+          <div class="mock-cell-num" style="color:#3ecf6e">768 ₽</div>
+          <div class="mock-cell-lbl">Ср. чек</div>
+        </div>
+        <div class="mock-cell">
+          <div class="mock-cell-num" style="color:#ff6b1a">42 000 ₽</div>
+          <div class="mock-cell-lbl">Баланс</div>
+        </div>
+      </div>
+      <div class="mock-btn-open">■ Закрыть смену</div>
+    </div>
+    <div class="mock-tabs">
+      <div class="mock-tab active"><span class="mock-tab-icon">🏠</span>Главная</div>
+      <div class="mock-tab"><span class="mock-tab-icon">🛒</span>Заказ</div>
+      <div class="mock-tab"><span class="mock-tab-icon">📊</span>Смена</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-eyebrow">Возможности</div>
+  <h2 class="section-title reveal">Всё что нужно<br><span>предпринимателю</span></h2>
+
+  <div class="features-grid">
+    <div class="feat-card reveal">
+      <span class="feat-icon">🛒</span>
+      <div class="feat-title">Быстрый заказ</div>
+      <div class="feat-desc">Одно нажатие — заказ записан. Настрой товары и работай без задержки. Счётчики, скидки, несколько позиций.</div>
+      <span class="feat-tag">1 нажатие = 1 заказ</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">📊</span>
+      <div class="feat-title">Итоги смены</div>
+      <div class="feat-desc">Открыл смену — записывай заказы — закрыл. Сразу видишь выручку, себестоимость и чистую прибыль.</div>
+      <span class="feat-tag">Авто-расчёт прибыли</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">💰</span>
+      <div class="feat-title">Баланс бизнеса</div>
+      <div class="feat-desc">Общий счёт компании. Записывай расходы на закупки, аренду, зарплаты. Видишь кассовый разрыв до того как он случился.</div>
+      <span class="feat-tag">Контроль кассы</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">📈</span>
+      <div class="feat-title">Аналитика и отчёты</div>
+      <div class="feat-desc">Средний чек, лучший день недели, динамика роста по месяцам. Топ товаров. Сравнение недель.</div>
+      <span class="feat-tag">Без Excel</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">🧮</span>
+      <div class="feat-title">P&L — Чистая прибыль</div>
+      <div class="feat-desc">Введи аренду, зарплаты и налоги — получи реальную прибыль после всех расходов. По каждому месяцу отдельно.</div>
+      <span class="feat-tag">Как у больших</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">👥</span>
+      <div class="feat-title">Несколько сотрудников</div>
+      <div class="feat-desc">У каждого свой PIN. Кассир видит только заказы — не видит прибыль и баланс. Владелец видит всё.</div>
+      <span class="feat-tag">Роли и доступы</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">☁️</span>
+      <div class="feat-title">Данные в облаке</div>
+      <div class="feat-desc">Вход через Google или Email. Данные синхронизируются — открывай с телефона, планшета или компьютера.</div>
+      <span class="feat-tag">Firebase</span>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-icon">📱</span>
+      <div class="feat-title">Работает как приложение</div>
+      <div class="feat-desc">Установи на телефон — иконка на рабочем столе, работает даже без интернета. Без App Store.</div>
+      <span class="feat-tag">PWA</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-eyebrow">Как это работает</div>
+    <h2 class="section-title reveal">Три шага<br><span>каждый день</span></h2>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <div class="step-title">Открой смену</div>
+        <div class="step-desc">Нажми одну кнопку в начале рабочего дня — счётчик запущен</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <div class="step-title">Записывай заказы</div>
+        <div class="step-desc">Продал шаурму — нажал кнопку. Всё записывается мгновенно</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <div class="step-title">Закрой смену</div>
+        <div class="step-desc">Видишь выручку, прибыль и средний чек. Переводишь прибыль в баланс одним нажатием</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHOM -->
+<section class="forwho">
+  <div class="section-eyebrow">Для кого</div>
+  <h2 class="section-title reveal">Подходит для <span>любой точки</span></h2>
+  <div class="forwho-grid">
+    <div class="who-card reveal"><span class="who-icon">🌯</span><div class="who-name">Шаурмячная</div><div class="who-sub">Ларёк, киоск</div></div>
+    <div class="who-card reveal"><span class="who-icon">☕</span><div class="who-name">Кофейня</div><div class="who-sub">Coffee to go</div></div>
+    <div class="who-card reveal"><span class="who-icon">🍕</span><div class="who-name">Пиццерия</div><div class="who-sub">Небольшое кафе</div></div>
+    <div class="who-card reveal"><span class="who-icon">🥗</span><div class="who-name">Столовая</div><div class="who-sub">Бизнес-ланч</div></div>
+    <div class="who-card reveal"><span class="who-icon">🛍</span><div class="who-name">Магазин</div><div class="who-sub">Розничная точка</div></div>
+    <div class="who-card reveal"><span class="who-icon">🍱</span><div class="who-name">Доставка</div><div class="who-sub">Фудкорт</div></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="section-eyebrow">Цена</div>
+  <h2 class="section-title reveal">Сейчас <span>бесплатно</span></h2>
+  <div class="price-card reveal">
+    <div class="free-badge">БЕСПЛАТНО</div>
+    <div class="price-tag">0 ₽</div>
+    <div class="price-period">навсегда на период бета-теста</div>
+    <ul class="price-features">
+      <li><span class="check">✓</span> Неограниченное число заказов и смен</li>
+      <li><span class="check">✓</span> Все отчёты и аналитика</li>
+      <li><span class="check">✓</span> Несколько сотрудников</li>
+      <li><span class="check">✓</span> Баланс и расходы</li>
+      <li><span class="check">✓</span> P&L расчёт чистой прибыли</li>
+      <li><span class="check">✓</span> Синхронизация через облако</li>
+      <li><span class="check">✓</span> Установка как приложение</li>
+    </ul>
+    <a href="https://waysmena.ru/app" class="btn-primary" style="width:100%;display:block;text-align:center;font-size:15px;padding:16px;">Начать бесплатно →</a>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial reveal">
+  <div class="quote">Раньше считал в голове и на бумажке. Теперь открыл телефон — сразу вижу сколько заработал за день.</div>
+  <div class="quote-author"><b>Заур</b> · владелец точки с шаурмой</div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="reveal">Начни считать<br><span style="color:var(--or)">прибыль сегодня</span></h2>
+  <p class="reveal">Регистрация через Google — 30 секунд. Первый заказ — 2 минуты.</p>
+  <a href="https://waysmena.ru/app" class="btn-primary reveal">Попробовать бесплатно →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Way<span>Smena</span></div>
+  <div class="footer-txt">© 2025 WaySmena · Учёт смен для малого бизнеса</div>
+  <div class="footer-txt">waysmena.ru</div>
+</footer>
+
+<script>
+// Scroll reveal
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); }
+  });
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+
+// Animated numbers in hero
+function animateNum(el, from, to, suffix, dur){
+  var start=null;
+  function step(ts){
+    if(!start)start=ts;
+    var p=Math.min((ts-start)/dur,1);
+    var val=Math.floor(from+(to-from)*p);
+    el.textContent=val.toLocaleString('ru')+suffix;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+</script>
+</body>
+</html>
